@@ -11,6 +11,7 @@ from datasets import load_from_disk
 
 import evaluate
 import torch
+from peft import AutoPeftModelForCausalLM
 from transformers import GenerationConfig, AutoTokenizer, AutoModelForCausalLM
 from transformers.integrations import WandbCallback
 
@@ -60,7 +61,7 @@ def load_ds_from_artifact(at_address, at_type="dataset"):
 
 
 def model_class(model_path):
-    if list(model_path.glob("*adapter*")):
+    if list(model_path.glob("*adapter*")) and not list(model_path.glob("model*.safetensors")):
         return AutoPeftModelForCausalLM
     return AutoModelForCausalLM
 
