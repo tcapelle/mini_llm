@@ -9,15 +9,15 @@ from trl import SFTTrainer
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
 
-from llm_recipes.data import create_alpaca_prompt, create_alpaca_prompt_with_response
-from llm_recipes.utils import freeze, parse_args, LLMSampleCB
-from llm_recipes.hf import debug_trainer_data
+from mini_llm.data import create_alpaca_prompt, create_alpaca_prompt_with_response
+from mini_llm.utils import freeze, parse_args, LLMSampleCB
+from mini_llm.hf import debug_trainer_data
 
 
 ALPACA_TOTAL_PACKED_SAMPLES = 11_210 # at seq_len=1024
 WANDB_PROJECT = "mini_llm"
 WANDB_ENTITY = "capecape"
-WANDB_TAGS = ["3b"]
+WANDB_TAGS = ["1b"]
 
 config = SimpleNamespace(
     dataset_at='capecape/alpaca_ft/alpaca_gpt4_splitted:v4',
@@ -25,7 +25,7 @@ config = SimpleNamespace(
     n_freeze = 12, # how many layers to freeze on the model
     batch_size = 8, # what my GPU can handle, depends on how many layers are we training
     effective_batch_size = 32, # batch size for gradient accumulation
-    gradient_checkpointing = True,
+    gradient_checkpointing = False,
     max_seq_length = 1024,
     num_train_epochs = 3, # we do 3 pasess over the dataset.
     freeze_embed = True,
