@@ -8,13 +8,15 @@ import torch
 from tqdm.auto import tqdm
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 
-from llm_recipes.utils import parse_args, load_model_from_artifact
-from llm_recipes.data import get_alpaca_split, create_alpaca_prompt
+from mini_llm.utils import parse_args, load_model_from_artifact
+from mini_llm.data import get_alpaca_split, create_alpaca_prompt
 
-WANDB_PROJECT = "alpaca_ft"
-ENTITY = "reviewco"
+WANDB_PROJECT = "mini_llm"
+ENTITY = "capecape  "
 DATASET_AT = 'capecape/alpaca_ft/alpaca_gpt4_splitted:v4'
-MODEL_AT = 'reviewco/alpaca_ft/1adjrp3l_meta-llama_Llama-2-7b-hf:v0'
+# MODEL_AT = 'capecape/mini_llm/ll59qvr4_alpaca:v0' # sft
+MODEL_AT = 'capecape/mini_llm/aeohiq9w_alpaca:v0' # LoRA
+WANDB_TAGS = ["1b", "lora"]
 
 TORCH_DTYPES = {"bf16":torch.bfloat16, "fp16":torch.float16, "fp32":torch.float}
 
@@ -60,6 +62,7 @@ if __name__=="__main__":
     wandb.init(project=config.wandb_project, 
                entity=config.entity, 
                job_type="inference", 
+               tags=WANDB_TAGS,
                config=config)
     config = wandb.config
     
