@@ -131,14 +131,15 @@ def main(config):
     if config.train: 
         trainer.train()
         if config.save_model:
-            trainer.save_model(training_args.output_dir)
+            save_path = f"{training_args.output_dir}/{wandb.run.id}_alpaca"
+            trainer.save_model(save_path)
             print("Saving model as artifact to wandb")
             model_at = wandb.Artifact(
                 name = f"{wandb.run.id}_alpaca", 
                 type="model",
                 description="Model trained on Alpaca GPT4 dataset",
                 metadata={"finetuned_from":config.model_id})
-            model_at.add_dir(training_args.output_dir)
+            model_at.add_dir(save_path)
             wandb.log_artifact(model_at)
     if config.evaluate:    
         _map_func = lambda row: {"text": create_alpaca_prompt(row)}
