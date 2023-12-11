@@ -5,8 +5,8 @@ from types import SimpleNamespace
 from tqdm.auto import tqdm
 import pandas as pd
 
-from llm_recipes.utils import parse_args
-from llm_recipes.openai import completion_with_backoff
+from mini_llm.utils import parse_args
+from mini_llm.openai import completion_with_backoff
 
 WANDB_PROJECT = "alpaca_ft"
 WANDB_ENTITY = "capecape"
