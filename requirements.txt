@@ -7,3 +7,4 @@ datasets
 evaluate
 trl
 pandas
+bitsandbytes
