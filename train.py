@@ -24,18 +24,18 @@ config = SimpleNamespace(
     model_id = 'TinyLlama/TinyLlama-1.1B-intermediate-step-955k-token-2T',
     n_freeze = 12, # how many layers to freeze on the model
     batch_size = 8, # what my GPU can handle, depends on how many layers are we training
-    effective_batch_size = 32, # batch size for gradient accumulation
+    effective_batch_size = 16, # batch size for gradient accumulation
     gradient_checkpointing = False,
-    max_seq_length = 1024,
+    max_seq_length = 512,
     num_train_epochs = 3, # we do 3 pasess over the dataset.
     freeze_embed = True,
-    use_lora = False,
+    use_lora = True,
     lr = 2e-5,
     save_model=True, # save model after training also save to wandb
     # for debug purposes
     max_steps=-1, 
     train=True,
-    evaluate=True,
+    evaluate=False,
     debug_data=False,
 )
 
@@ -60,8 +60,6 @@ def get_train_args(config, output_dir = "./output/"):
         gradient_accumulation_steps=config.gradient_accumulation_steps,
         gradient_checkpointing=config.gradient_checkpointing,
         gradient_checkpointing_kwargs={"use_reentrant": False},
-        # evaluation_strategy="steps",
-        # eval_steps=config.eval_steps,
         evaluation_strategy="no",
         # logging strategies
         logging_strategy="steps",
@@ -73,11 +71,6 @@ def get_train_args(config, output_dir = "./output/"):
 def main(config):
     # some sane defaults computations
     config.gradient_accumulation_steps = (1024 // config.max_seq_length) * config.effective_batch_size // config.batch_size
-    if config.max_steps == -1:
-        config.max_steps = config.num_train_epochs * ALPACA_TOTAL_PACKED_SAMPLES // (config.batch_size * config.gradient_accumulation_steps)
-    config.eval_steps = config.max_steps // config.num_train_epochs
-    if config.debug_data: 
-        config.max_steps = -1
     config.tokens_per_step = config.max_seq_length * config.batch_size * config.gradient_accumulation_steps
     print(f"\nWe are training for {config.max_steps} steps with an effective batch size of {config.effective_batch_size} and a gradient accumulation of {config.gradient_accumulation_steps} steps.")
     print(f"Tokens per step max_seq_len * bs * grad_accum_steps: {config.tokens_per_step}\n")
@@ -112,6 +105,8 @@ def main(config):
                job_type="train",
                tags=WANDB_TAGS,
                config=config)
+
+    config = wandb.config
     train_dataset, eval_dataset = get_alpaca_ds(config.dataset_at)
     
     # override whatever train args we may need

@@ -9,7 +9,6 @@ import pandas as pd
 
 from datasets import load_from_disk
 
-import evaluate
 import torch
 from peft import AutoPeftModelForCausalLM
 from transformers import GenerationConfig, AutoTokenizer, AutoModelForCausalLM

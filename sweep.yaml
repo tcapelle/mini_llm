@@ -1,0 +1,22 @@
+program: train.py
+method: grid
+entity: capecape
+project: mini_llm
+
+parameters:
+  model_id: 
+    value: 'TinyLlama/TinyLlama-1.1B-intermediate-step-955k-token-2T'
+  n_freeze:
+    value: 8
+  gradient_checkpointing:
+    values: ['True', 'False']
+  use_lora:
+    values: ['True', 'False']
+  batch_size:
+    values: [1,2,4,8,16,32]
+  max_seq_len:
+    values: [512, 1024]
+  max_steps:
+    value: 10
+  evaluate:
+    value: False

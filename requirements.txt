@@ -1,8 +1,9 @@
 wandb
+scipy
 transformers
 peft
-bitsandbytes
 accelerate
 datasets
 evaluate
 trl
+pandas
