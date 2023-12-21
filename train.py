@@ -43,6 +43,7 @@ def get_ds_artifact(dataset_at):
     wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, job_type="download_dataset")
     artifact = wandb.use_artifact(dataset_at, type='dataset')
     artifact_dir = artifact.download()
+    wandb.finish()
     return artifact_dir
 
 
