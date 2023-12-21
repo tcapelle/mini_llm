@@ -8,7 +8,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
 from trl import SFTTrainer
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
-from accelerate import Accelerator
 
 from mini_llm.data import create_alpaca_prompt, create_alpaca_prompt_with_response
 from mini_llm.utils import freeze, parse_args, LLMSampleCB
@@ -18,6 +17,7 @@ from mini_llm.hf import debug_trainer_data
 ALPACA_TOTAL_PACKED_SAMPLES = 11_210 # at seq_len=1024
 WANDB_PROJECT = "mini_llm"
 WANDB_ENTITY = "capecape"
+WANDB_TAGS = ["1b"]
 
 config = SimpleNamespace(
     dataset_at='capecape/alpaca_ft/alpaca_gpt4_splitted:v4',
@@ -39,13 +39,13 @@ config = SimpleNamespace(
     debug_data=False,
 )
 
-def get_ds_artifact(dataset_at):
-    wandb.init(project=WANDB_PROJECT, entity=WANDB_ENTITY, job_type="download_dataset")
+def get_alpaca_ds(dataset_at):
     artifact = wandb.use_artifact(dataset_at, type='dataset')
     artifact_dir = artifact.download()
-    wandb.finish()
-    return artifact_dir
-
+    alpaca_ds = load_dataset("json", data_dir=artifact_dir)
+    train_dataset = alpaca_ds["train"]
+    eval_dataset = alpaca_ds["test"]
+    return train_dataset, eval_dataset
 
 def get_train_args(config, output_dir = "./output/"):
     training_args = TrainingArguments(
@@ -69,18 +69,6 @@ def get_train_args(config, output_dir = "./output/"):
     return training_args
 
 def main(config):
-    accelerator = Accelerator()
-
-    os.environ["WANDB_PROJECT"] = WANDB_PROJECT
-    os.environ["WANDB_ENTITY"] = WANDB_ENTITY
-
-    if accelerator.is_main_process:
-        artifact_dir = get_ds_artifact(config.dataset_at)
-    
-    alpaca_ds = load_dataset("json", data_dir=artifact_dir)
-    train_dataset = alpaca_ds["train"]
-    eval_dataset = alpaca_ds["test"]
-
     # some sane defaults computations
     config.gradient_accumulation_steps = (1024 // config.max_seq_length) * config.effective_batch_size // config.batch_size
     config.tokens_per_step = config.max_seq_length * config.batch_size * config.gradient_accumulation_steps
@@ -89,6 +77,7 @@ def main(config):
     
     model = AutoModelForCausalLM.from_pretrained(
         config.model_id,
+        device_map="auto",
         trust_remote_code=True,
         low_cpu_mem_usage=True,
         torch_dtype=torch.bfloat16,
@@ -109,6 +98,16 @@ def main(config):
         config.n_freeze = "all"
     else:
         freeze(model, config.n_freeze, config.freeze_embed)
+
+    # wandb stuff
+    wandb.init(project=WANDB_PROJECT, 
+               entity=WANDB_ENTITY, 
+               job_type="train",
+               tags=WANDB_TAGS,
+               config=config)
+
+    config = wandb.config
+    train_dataset, eval_dataset = get_alpaca_ds(config.dataset_at)
     
     # override whatever train args we may need
     training_args = get_train_args(config)
