@@ -74,8 +74,8 @@ def main(config):
     os.environ["WANDB_PROJECT"] = WANDB_PROJECT
     os.environ["WANDB_ENTITY"] = WANDB_ENTITY
 
-
-    artifact_dir = get_ds_artifact(config.dataset_at)
+    if accelerator.is_main_process:
+        artifact_dir = get_ds_artifact(config.dataset_at)
     
     alpaca_ds = load_dataset("json", data_dir=artifact_dir)
     train_dataset = alpaca_ds["train"]
